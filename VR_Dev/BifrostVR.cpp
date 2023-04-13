@@ -16,20 +16,23 @@ void HandleMotion( int x, int y, int mask ) { }
 void HandleDestroy() { }
 
 VROverlayHandle_t ulHandle; // OpenVR application ID
+TrackedDeviceIndex_t leftHandID; // ID of left remote
+TrackedDeviceIndex_t rightHandID; // ID of right remote
 
 // Bifrost specific val defs
 int WIDTH = 256;
-int HEIGHT = 256;
+int HEIGHT = 64;
 
 // Bifrost original functions
-bool FindHand()
+bool BindHand()
 {
-    TrackedDeviceIndex_t leftHandID;
+    if (leftHandID != 0 && leftHandID != -1) return true;
     leftHandID = VRSystem()->GetTrackedDeviceIndexForControllerRole(TrackedControllerRole_LeftHand);
     if (leftHandID == 0 || leftHandID == -1) return false;
-    printf("Controller ID gathered");
+    printf("Left controller ID gathered\n");
     HmdMatrix34_t transform = { 0 };
     transform.m[0][0] = 1;
+    transform.m[1][3] = .1;
     transform.m[1][1] = 1;
     transform.m[2][2] = 1;
 
@@ -37,18 +40,30 @@ bool FindHand()
     return true;
 }
 
+bool FindRight() 
+{
+    if (rightHandID != 0 && rightHandID != -1) return true;
+    rightHandID = VRSystem()->GetTrackedDeviceIndexForControllerRole(TrackedControllerRole_RightHand);
+    if (rightHandID == 0 || rightHandID == -1) return false;
+    printf("Right controller ID gathered\n");
+    return true;
+}
+
 int main()
 {
-    CNFGSetup( "Hello, world", WIDTH, HEIGHT);
+    CNFGSetup( "BifrostVR", -WIDTH, -HEIGHT); // Negative hides the application window on desktop, leaving only the terminal
     {
         EVRInitError e;
         VR_Init(&e, VRApplication_Overlay); // Sets application type as overlay
         if (e != VRInitError_None) return 1;
     }
 
-    VROverlay()->CreateOverlay("Hello, world-tag", "Hello, world", &ulHandle); // Prepares and starts overlay
+    VROverlay()->CreateOverlay("BifrostVR-tag", "BifrostVR", &ulHandle); // Prepares and starts overlay
     VROverlay()->SetOverlayWidthInMeters(ulHandle, 0.3);
     VROverlay()->SetOverlayColor(ulHandle, 1,1,1);
+    VROverlay()->SetOverlayInputMethod(ulHandle, VROverlayInputMethod_Mouse); // Enables VR controller interactions
+    VROverlay()->SetOverlayFlag(ulHandle, VROverlayFlags_MakeOverlaysInteractiveIfVisible, true);
+    VROverlay()->SetOverlayFlag(ulHandle, VROverlayFlags_SendVRTouchpadEvents, true);
     VRTextureBounds_t bounds; // Prepares overlay for future texture handling
     bounds.uMin = 0;
     bounds.uMax = 1;
@@ -67,18 +82,34 @@ int main()
     }
 
     bool hands = false;
+    bool trig;
     while(CNFGHandleInput())
     {
-        CNFGBGColor = 0x000000ff; //Transparent background
+        CNFGBGColor = 0x00000000; //Transparent background
         CNFGClearFrame();
 
         CNFGColor( 0xffffffff ); //Set draw color to white
 		CNFGPenX = 1; CNFGPenY = 1;
-        CNFGDrawText( "Hello, World", 4 );
+
+        struct VREvent_t cEvent;
+        if (!hands) // Attatches drawn window to (left) hand for ease of view
+        { 
+            bool left = BindHand();
+            bool right = FindRight();
+            if (left && right) hands = true;
+            CNFGDrawText( "Waiting on remotes", 4 );
+        }  
+        else
+        {
+            while(VROverlay()->PollNextOverlayEvent( ulHandle, &cEvent, sizeof(cEvent))) // Process events
+            {
+                if (cEvent.data.mouse.button == VRMouseButton_Left) trig = true;
+            }
+            if (trig) CNFGDrawText( "Trigger", 4 );
+            else CNFGDrawText( "No trigger", 4 );
+        }
 
         CNFGFlushRender(); // Finalizes all rawdraw changes within this frame
-
-        if (!hands) hands = FindHand(); // Attatches drawn window to (left) hand for ease of view
 
         glBindTexture(GL_TEXTURE_2D, texture); // Grabs current OpenGL window and binds it to texture
         glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, WIDTH, HEIGHT, 0);
@@ -88,9 +119,6 @@ int main()
         tex.handle = (void*)(intptr_t)texture;
 
         VROverlay()->SetOverlayTexture( ulHandle, &tex ); // Send texture into OpenVR
-       
-        struct VREvent_t nEvent; // Process through texture events.
-        if (hands) VROverlay()->PollNextOverlayEvent( ulHandle, &nEvent, 0xffffff );
        
         CNFGSwapBuffers(); // Prepares rawdraw for next frame 
     }
