@@ -21,7 +21,7 @@ TrackedDeviceIndex_t rightHandID; // ID of right remote
 
 // Bifrost specific val defs
 int WIDTH = 256;
-int HEIGHT = 64;
+int HEIGHT = 32;
 
 // Bifrost original functions
 bool BindHand()
@@ -32,7 +32,7 @@ bool BindHand()
     printf("Left controller ID gathered\n");
     HmdMatrix34_t transform = { 0 };
     transform.m[0][0] = 1;
-    transform.m[1][3] = .1;
+    transform.m[1][3] = .2;
     transform.m[1][1] = 1;
     transform.m[2][2] = 1;
 
@@ -64,6 +64,7 @@ int main()
     VROverlay()->SetOverlayInputMethod(ulHandle, VROverlayInputMethod_Mouse); // Enables VR controller interactions
     VROverlay()->SetOverlayFlag(ulHandle, VROverlayFlags_MakeOverlaysInteractiveIfVisible, true);
     VROverlay()->SetOverlayFlag(ulHandle, VROverlayFlags_SendVRTouchpadEvents, true);
+    VROverlay()->SetOverlayFlag(ulHandle, VROverlayFlags_SendVRDiscreteScrollEvents, true);
     VRTextureBounds_t bounds; // Prepares overlay for future texture handling
     bounds.uMin = 0;
     bounds.uMax = 1;
@@ -82,7 +83,10 @@ int main()
     }
 
     bool hands = false;
-    bool trig;
+    bool rc;
+    bool lc;
+    bool down;
+    bool up;
     while(CNFGHandleInput())
     {
         CNFGBGColor = 0x00000000; //Transparent background
@@ -92,7 +96,7 @@ int main()
 		CNFGPenX = 1; CNFGPenY = 1;
 
         struct VREvent_t cEvent;
-        if (!hands) // Attatches drawn window to (left) hand for ease of view
+        if (!hands) // Adds left and right hand to memory and locks overlay over left hand
         { 
             bool left = BindHand();
             bool right = FindRight();
@@ -103,10 +107,38 @@ int main()
         {
             while(VROverlay()->PollNextOverlayEvent( ulHandle, &cEvent, sizeof(cEvent))) // Process events
             {
-                if (cEvent.data.mouse.button == VRMouseButton_Left) trig = true;
+                if (cEvent.data.mouse.button == VRMouseButton_Left) {
+                    lc = true;
+                    rc = false;
+                    down = false;
+                    up = false;
+                }
+                else if (!cEvent.data.scroll.unused) {
+                    if (cEvent.data.scroll.ydelta < -0.9) {
+                        down = true;
+                        lc = false;
+                        rc = false;
+                        up = false;
+                    }
+                    else if (cEvent.data.scroll.ydelta > 0.9) {
+                        up = true;
+                        lc = false;
+                        rc = false;
+                        down = false;
+                    }
+                }
+                else if (cEvent.data.mouse.button == VRMouseButton_Right) { // checked last because right is on the scroll wheel
+                    rc = true;
+                    lc = false;
+                    down = false;
+                    up = false;
+                }
             }
-            if (trig) CNFGDrawText( "Trigger", 4 );
-            else CNFGDrawText( "No trigger", 4 );
+            if (rc) CNFGDrawText( "Right", 4 );
+            else if (lc) CNFGDrawText( "Left", 4 );
+            else if (down) CNFGDrawText( "Down", 4 );
+            else if (up) CNFGDrawText( "Up", 4 );
+            else CNFGDrawText( "No trigger yet", 4 );
         }
 
         CNFGFlushRender(); // Finalizes all rawdraw changes within this frame
