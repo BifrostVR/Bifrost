@@ -6,6 +6,7 @@
 #include "rawdraw_sf.h"
 #include "openvr.h"
 #include <stdio.h>
+#include <time.h>
 
 using namespace::vr; // "openvr.h" uses the vr namespace, so cout and cin will not be available in this specific script
 
@@ -19,9 +20,11 @@ VROverlayHandle_t ulHandle; // OpenVR application ID
 TrackedDeviceIndex_t leftHandID; // ID of left remote
 TrackedDeviceIndex_t rightHandID; // ID of right remote
 
-// Bifrost specific val defs
+// OpenGL info
 int WIDTH = 256;
-int HEIGHT = 32;
+int HEIGHT = 64;
+
+FILE * sFile; // Server info
 
 // Bifrost original functions
 bool BindHand()
@@ -32,7 +35,7 @@ bool BindHand()
     printf("Left controller ID gathered\n");
     HmdMatrix34_t transform = { 0 };
     transform.m[0][0] = 1;
-    transform.m[1][3] = .2;
+    transform.m[1][3] = .1;
     transform.m[1][1] = 1;
     transform.m[2][2] = 1;
 
@@ -59,7 +62,7 @@ int main()
     }
 
     VROverlay()->CreateOverlay("BifrostVR-tag", "BifrostVR", &ulHandle); // Prepares and starts overlay
-    VROverlay()->SetOverlayWidthInMeters(ulHandle, 0.3);
+    VROverlay()->SetOverlayWidthInMeters(ulHandle, 0.25);
     VROverlay()->SetOverlayColor(ulHandle, 1,1,1);
     VROverlay()->SetOverlayInputMethod(ulHandle, VROverlayInputMethod_Mouse); // Enables VR controller interactions
     VROverlay()->SetOverlayFlag(ulHandle, VROverlayFlags_MakeOverlaysInteractiveIfVisible, true);
@@ -83,10 +86,9 @@ int main()
     }
 
     bool hands = false;
-    bool rc;
-    bool lc;
-    bool down;
-    bool up;
+    bool lc = false;;
+    bool closed = true;;
+    time_t time1, time2;
     while(CNFGHandleInput())
     {
         CNFGBGColor = 0x00000000; //Transparent background
@@ -105,43 +107,56 @@ int main()
         }  
         else
         {
-            while(VROverlay()->PollNextOverlayEvent( ulHandle, &cEvent, sizeof(cEvent))) // Process events
-            {
-                if (cEvent.data.mouse.button == VRMouseButton_Left) {
-                    lc = true;
-                    rc = false;
-                    down = false;
-                    up = false;
-                }
-                else if (!cEvent.data.scroll.unused) {
-                    if (cEvent.data.scroll.ydelta < -0.9) {
-                        down = true;
-                        lc = false;
-                        rc = false;
-                        up = false;
+            // This if else tree is the meat of the program. It checks for inactivty and processes inputs for interaction.
+            if (closed) {
+                while(VROverlay()->PollNextOverlayEvent( ulHandle, &cEvent, sizeof(cEvent))) // Process events
+                {
+                    if (cEvent.data.mouse.button == VRMouseButton_Left) {
+                        lc = true;
+                        closed = false;
+                        time(&time1);
                     }
-                    else if (cEvent.data.scroll.ydelta > 0.9) {
-                        up = true;
-                        lc = false;
-                        rc = false;
-                        down = false;
-                    }
-                }
-                else if (cEvent.data.mouse.button == VRMouseButton_Right) { // checked last because right is on the scroll wheel
-                    rc = true;
-                    lc = false;
-                    down = false;
-                    up = false;
                 }
             }
-            if (rc) CNFGDrawText( "Right", 4 );
-            else if (lc) CNFGDrawText( "Left", 4 );
-            else if (down) CNFGDrawText( "Down", 4 );
-            else if (up) CNFGDrawText( "Up", 4 );
-            else CNFGDrawText( "No trigger yet", 4 );
+            else {
+                while(VROverlay()->PollNextOverlayEvent( ulHandle, &cEvent, sizeof(cEvent))) // Process events
+                {
+                    time(&time1);
+                }
+                time(&time2);
+                if (difftime(time2, time1) > 5) {
+                    lc = false;
+                    closed = true;
+                }
+            }
+
+            // This if else tree turns the interactions into texture changes on the overlay
+            if (lc) {
+                bool con = true;
+                sFile = fopen( "//169.254.136.180/bifrost_texts/Test.txt", "r"); // Connects to the servers output
+                if (sFile == NULL) {
+                    CNFGDrawText("Failed to fetch server", 4);
+                    con = false;
+                }
+                if (con) {
+                    char contents[100];
+                    fgets(contents, 100, sFile);
+                    CNFGPenX = 1; CNFGPenY = 1;
+                    CNFGDrawText( contents, 4 );
+                }
+            }
+            else if (closed) {
+                CNFGColor( 0x3f3f3fff );
+                RDPoint points[8] = { { 118, 27 }, { 118, 17 }, { 123, 12 }, { 133, 12 }, {138, 17}, {138, 27}, {133, 32}, {123, 32}};
+                CNFGTackPoly( points, 8 );
+                CNFGPenX = 120; CNFGPenY = 15;
+                CNFGColor( 0xffffffff );
+                CNFGDrawText( "BF", 3 );
+            }
         }
 
         CNFGFlushRender(); // Finalizes all rawdraw changes within this frame
+        if (sFile != NULL) fclose(sFile); // Disconects after finilization of text
 
         glBindTexture(GL_TEXTURE_2D, texture); // Grabs current OpenGL window and binds it to texture
         glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, WIDTH, HEIGHT, 0);
