@@ -22,15 +22,7 @@
                         <img src="picture.png" alt="Profile Picture">
                     </div>
                     <div class="left-sidebar-text">
-                        <label for="tbuser">Username:</label>
-                        <input type="text" id="tbuser" placeholder="username" maxlength="25">
-                        <label for="tbpass">Password:</label>
-                        <input type="text" id="tbpass" placeholder="password" maxlength="25">
-                        <p>
-                        <input type="button" id="loginbtn" value="login">
                         <p>Bio text goes here</p>
-                        <!-- <a href="" id="a">click here to download your file</a>
-                        <button onclick="download('file text', 'myfilename.txt', 'text/plain')">Create file</button> -->
                         <p class="output" id="loginoutput"></p>
                     </div>
                 </div>
@@ -57,32 +49,5 @@
             </div>
         </div>
         </main>
-        <script>
-            const txt1 = document.getElementById('tbuser');
-            const txt2 = document.getElementById('tbpass');
-            const loginbtn = document.getElementById('loginbtn');
-            const loginoutput = document.getElementById('loginoutput')
-
-            function login()
-            {
-                loginoutput.innerHTML += txt1.value + "<p></p>" + txt2.value;
-            }
-
-            loginbtn.addEventListener('click', login);
-
-            // function download(text, name, type) 
-            // {
-            //     var a = document.getElementById("a");
-            //     var file = new Blob([text], {type: type});
-            //     a.href = URL.createObjectURL(file);
-            //     a.download = name;
-            // }
-
-            // loginbtn.addEventListener('click', download(txt1.value + "<p></p>" + txt2.value, 'myfilename.txt', 'text/plain'));
-
-            //create post
-            //read post from txt file
-
-        </script>
     </body>
 </html>
