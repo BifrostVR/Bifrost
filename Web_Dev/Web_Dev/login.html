@@ -11,9 +11,6 @@
             <div class="logo">
                 <img src="logo.png" alt="Bifrost Logo">
             </div>
-            <div class="login">
-                <a href="login.html"><img src="login.png" alt="Login"></a>
-            </div>
         </header>
         <main>
             <div class="user-info">
@@ -28,7 +25,8 @@
                     <input type="button" id="loginbtn" value="login">
                     <!-- <a href="" id="a">click here to download your file</a>
                     <button onclick="download('file text', 'myfilename.txt', 'text/plain')">Create file</button> -->
-                    <p class="output" id="loginoutput"></p>
+                    <div class="output" id="loginoutput">
+                    </div>
             </div>
         </main>
         <script>
@@ -39,7 +37,7 @@
 
             function login()
             {
-                loginoutput.innerHTML += txt1.value + "<p></p>" + txt2.value;
+                loginoutput.innerHTML = txt1.value + "  " + txt2.value + "<p></p>";
             }
 
             loginbtn.addEventListener('click', login);
