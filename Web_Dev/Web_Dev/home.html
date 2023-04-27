@@ -27,8 +27,10 @@
                         <label for="tbpass">Password:</label>
                         <input type="text" id="tbpass" placeholder="password" maxlength="25">
                         <p>
-                        <input type="button" id="loginbtn" value="login">
+                        <input type="button" id="loginbtn" value="save">
                         <p>Bio text goes here</p>
+                        <a href="" id="a">click here to download your file</a>
+                        <button onclick="download('file text', 'myfilename.txt', 'text/plain')">Create file</button>
                         <p class="output" id="loginoutput"></p>
                     </div>
                 </div>
@@ -66,7 +68,15 @@
                 loginoutput.innerHTML += txt1.value + "<p></p>" + txt2.value;
             }
 
-            loginbtn.addEventListener('click', login);
+            function download(text, name, type) 
+            {
+                var a = document.getElementById("a");
+                var file = new Blob([text], {type: type});
+                a.href = URL.createObjectURL(file);
+                a.download = name;
+            }
+
+            loginbtn.addEventListener('click', download('file text', 'myfilename.txt', 'text/plain'));
 
         </script>
     </body>
