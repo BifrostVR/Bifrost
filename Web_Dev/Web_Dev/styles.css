@@ -24,6 +24,37 @@
     height: 40px;
     width: 90px;
   }
+
+/* edit by em starts here */
+
+  .user-info img{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+  }
+  
+  .user-info input {
+    display: block;
+    margin: auto;
+    width: 50%;
+  }
+
+  .user-info label {
+    display: block;
+    margin: auto;
+    width: 50%;
+  }
+
+  .output{
+    display: block;
+    padding-top: 100px;
+    margin: auto;
+    width: 50%;
+  }
+
+/* edit by em stops here */
+
   .content {
     display: flex;
     justify-content: center;
