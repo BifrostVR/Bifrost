@@ -2,6 +2,7 @@
   body{
     margin: 0;
     padding: 0;
+    background-color: #000000;
   }
   header {
     display: flex;
@@ -10,22 +11,13 @@
     background-color: #858585;
   }
   .logo {
-    /* Add any logo styles here */
     padding-left: 10px;
   }
-  .login {
-    /* Add any login link styles here */
-    position: relative;
-    top: 0;
-    right: 0;
-  }
   .login img {
-    /* Add any image styles here */
     height: 40px;
     width: 90px;
   }
-
-/* edit by em starts here */
+  /* edit by em starts here */
 
   .user-info img{
     display: block;
@@ -54,44 +46,48 @@
   }
 
 /* edit by em stops here */
-
   .content {
     display: flex;
     justify-content: center;
   }
   .post-container {
-    justify-content: center;
     border: 5px solid #5aa3c4;
-    box-sizing: border-box;
     background-color: #000000;
-    max-width: 80%;
+    max-width: 55%;
+    margin-top: 10px;
   }
-  .post-container img {
-    max-width: 80%;
-    max-height: 70%;
-    object-fit: contain;
+  .post-container .post-profile img {
+    max-width: 95%;
     display: block;
     margin: 0 auto;
   }
   .post-container .username {
     color: rgb(177, 177, 177);
     font-family: Verdana, sans-serif;
-    margin-top: 0;
     padding-left: 10px;
   }
   .post-container .like-counter {
     color: red;
     font-family: Verdana, sans-serif;
     padding-left: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
+  .post-container .like-button img {
+    margin-right: 10px;
+    width: 20px;
+    cursor: pointer;
+}
   .left-sidebar{
+    font-family: Verdana, sans-serif;
     position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
     max-width: 15%;
-    background-color: #fff;
-    border-right: 1px solid #ccc;
+    background-color: #83b4bb;
+    border: 3px solid #b8b8b8;
     padding: 20px;
     margin-top: 100px;
     margin-bottom: 100px;
@@ -103,30 +99,34 @@
   }
   .left-sidebar img {
     width: 100%;
-    height: auto;
-    display: block;
     margin-bottom: 20px;
   }
   .right-sidebar{
+    font-family: Verdana, sans-serif;
     position: fixed;
     top: 0;
     bottom: 0;
     right: 0;
     width: 15%;
-    background-color: #fff;
-    border-right: 1px solid #ccc;
+    background-color: #83b4bb;
+    border: 3px solid #b8b8b8;
     padding: 20px;
     margin-top: 100px;
     margin-bottom: 100px;
   }
   .right-sidebar-text {
-    text-align: center;
+        text-align: center;
     margin-top: 20px;
     font-size: 1.5vw;
   }
   .right-sidebar img {
-    width: 100%;
-    height: auto;
-    display: block;
     margin-bottom: 20px;
+  }
+  .friend {
+    display: inline-flex;
+  }
+  .friend img{
+    max-width: 15%;
+    object-fit: contain;
+    margin-bottom: 0;
   }
