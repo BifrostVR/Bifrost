@@ -1,13 +1,4 @@
 <!DOCTYPE html> 
-<html lang="en-US"> 
-    <head> 
-        <meta charset="utf-8"> 
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-        <link rel="stylesheet" href="css/styles.css"> 
-     
-        <!DOCTYPE html> 
 <html> 
     <head> 
         <!--Gurantees use of correct and updated characters for HTML5-->
@@ -31,21 +22,23 @@
                         <img src="picture.png" alt="Profile Picture">
                     </div>
                     <div class="left-sidebar-text">
-                        <p>Bio text goes here</p>
-                        <p class="output" id="loginoutput"></p>
                     </div>
                 </div>
             </div>
         <div class="content">
-            <!-- Add other users' posts here -->
             <div class="post-container">
                 <div class="username">
                     <p>JohnDoe99</p>
                 </div>
-                <!-- Add photos and videos here -->
-            <img src="picture.png" />
-                <div class="like-counter">
-                    <p>100 likes</p>
+                <div class = "post-profile">
+                    <img src="picture.png" />
+                </div>
+                <div class="like-counter" id = "like-counter" data-count="0">
+                    <p>0 likes</p>
+                    <div class = "like-button">
+                        <img src="unliked.png" id="like-button" onclick="incrementLike()">
+                        <script src="like.js"></script>
+                    </div>
                 </div>
             </div>
         </div>
@@ -53,7 +46,10 @@
             <div class="friends-list">
                 <div class="left-sidebar-text">
                     <p>Friends</p>
-                    <p>Blake</p>
+                    <div class="friend">
+                        <img src="picture.png" alt="Profile Picture">
+                        <p>Blake</p>
+                    </div>
                 </div>
             </div>
         </div>
