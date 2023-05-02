@@ -16,54 +16,104 @@
             <div class="user-info">
                     <img src="picture.png" alt="Profile Picture" class="center">
                     <p></p>
-                    <label for="tbuser">Username:</label>
-                    <input type="text" id="tbuser" placeholder="username" maxlength="25">
-                    <p></p>
-                    <label for="tbpass">Password:</label>
-                    <input type="text" id="tbpass" placeholder="password" maxlength="25">
-                    <p></p>
-                    <input type="button" id="loginbtn" value="login">
-                    <p></p>
-                    <input type="button" id="submitbtn" value="submit">
-                        <div class="output" id="loginoutput"></div>
             </div>
         </main>
+        <!-- <form action="action.php" method="post">
+            What is your name?<br>
+            <input type="text" name="field1"><br>
+              <input type="text" name="field2"><br>
+             <input type="submit" value="Submit">
+          </form> -->
+          <hr/>
+Game Results
+<table id="gamesTable" class="table table-bordered table-hover"> 
+    <thead> 
+        <th>Username</th><th>Password</th>
+    </thead> 
+    <tbody>
+            <tr> 
+                <td> 
+                    {{this/Team1Name}}
+                </td> 
+                <td> 
+                    {{this/Team2Name}} 
+                </td>             
+            </tr>
+    </tbody> 
+</table> 
 
-        
-
-         <form>
-            <label for="file">File</label>
-            <input id="file" type="file" />
-            <button>Upload</button>
-          </form>
-
-        <script>
-            const txt1 = document.getElementById('tbuser');
-            const txt2 = document.getElementById('tbpass');
-            const loginbtn = document.getElementById('loginbtn');
-            const loginoutput = document.getElementById('loginoutput');
-            const submitbtn = document.getElementById('submitbtn');
-
-            function login()
-            {
-                loginoutput.innerHTML = txt1.value + "  " + txt2.value + "<p></p>";
-            }
-
-            loginbtn.addEventListener('click', login);
-
-            function download(text, name, type) 
-            {
-                var a = document.getElementById("a");
-                var file = new Blob([text], {type: type});
-                a.href = URL.createObjectURL(file);
-                a.download = name;
-            }
-
-            submitbtn.addEventListener('click', download('test text', 'myfilename.txt', 'text/plain'));
-
-            //create post into txt file
-            //read post from txt file
-
-        </script>
-    </body>
+<h4> 
+    Enter in information: 
+</h4> 
+ 
+<form id="newGameForm"> 
+    <div class="form-group"> 
+        <label for="team1Name">Username</label> 
+        <input type="text" class="form-control" name="team1Name" id="team1Name"> 
+    </div>
+    <div class="form-group"> 
+        <label for="team2Name">Password</label> 
+        <input type="text" class="form-control" name="team2Name" id="team2Name"> 
+    </div>   
+    <hr/>
+    <button id="submitButton" class="btn btn-primary">Submit</button> 
+</form> 
+ 
+<script> 
+    document.addEventListener("DOMContentLoaded", (event) => { 
+        //alert("The page has been loaded."); 
+    }); 
+ 
+    document.getElementById("submitButton").addEventListener("click", async (e) => { 
+        e.preventDefault(); 
+        console.log("Submit button pressed");
+        try { 
+            const team1Name = document.getElementById("team1Name").value; 
+            const team1Score = document.getElementById("team2Name").value;
+ 
+            const userData = { 
+                team1Name: team1Name,
+                team1Score: team1Score,
+            }; 
+ 
+            const fetchConfigData = { 
+                method: "POST", 
+                body: JSON.stringify(userData),  
+                headers: { 
+                    "Content-Type": "application/json" 
+                } 
+            }; 
+ 
+            const response = await fetch("/", fetchConfigData); 
+         
+            if(response.ok) { 
+                const games = await response.json(); 
+                loadTableWithGames(games); 
+            } else { 
+                console.log("Error with the response data"); 
+            } 
+ 
+        } catch (err) { 
+            console.log(`Error: ${err}`); 
+        } 
+    }); 
+ 
+    function loadTableWithGames(games) { 
+        const table = document.getElementById("gamesTable"); 
+        const tableBody = table.children[1]; 
+ 
+        tableBody.innerHTML = ""; 
+ 
+        games.forEach(game => { 
+            const tr = document.createElement("tr");
+            const team1NameTd = document.createElement("td"); 
+            team1NameTd.innerHTML = `${game["Team1Name"]}`; 
+            const team1ScoreTd = document.createElement("td"); 
+            team1ScoreTd.innerHTML = `${game["Team2Name"]}`;
+            tr.appendChild(team1NameTd); 
+            tr.appendChild(team1ScoreTd);
+            tableBody.appendChild(tr); 
+        }); 
+    }
+    </script>
 </html>

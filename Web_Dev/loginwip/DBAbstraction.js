@@ -31,10 +31,10 @@ class DBAbstraction {
  
     createTables() { 
         const sql = ` 
-            CREATE TABLE IF NOT EXISTS 'Userpass' (  
+            CREATE TABLE IF NOT EXISTS 'Games' (  
                 'Id' INTEGER,  
-                'Username' TEXT,  
-                'Password' TEXT,  
+                'Team1Name' TEXT,  
+                'Team2Name' TEXT,
                 PRIMARY KEY('Id') 
             );             
         `; 
@@ -52,11 +52,11 @@ class DBAbstraction {
         }); 
     }
 
-    insertUserpass(username, password)
+    insertGame(team1Name, team2Name)
     {
-        const sql = 'INSERT INTO Userpass (Username, Password) VALUES (?, ?);'; 
+        const sql = 'INSERT INTO Games (Team1Name, Team2Name) VALUES (?, ?);'; 
         return new Promise((resolve, reject) => { 
-            this.db.run(sql, [username, password], (err) => {                 
+            this.db.run(sql, [team1Name, team2Name], (err) => {                 
                 if(err) { 
                     reject(err); 
                 } else { 
@@ -69,8 +69,8 @@ class DBAbstraction {
     getAll()
     {
         const sql = ` 
-            SELECT Username, Password 
-            FROM Userpass 
+            SELECT Team1Name, Team2Name 
+            FROM Games 
         `; 
  
         return new Promise((resolve, reject) => { 

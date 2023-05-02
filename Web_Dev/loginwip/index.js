@@ -1,19 +1,16 @@
 'use strict' 
  
 const express = require('express');
-const handlebars = require('express-handlebars').create({defaultLayout: 'main'});  
 const morgan = require('morgan'); 
 const bodyParser = require("body-parser"); 
 const DBAbstraction = require('./DBAbstraction'); 
 const path = require('path');
 
-const filePath =  path.join(__dirname , 'data', 'userpass.sqlite');
+const filePath =  path.join(__dirname , 'data', 'games.sqlite');
 const db = new DBAbstraction(filePath);
  
 const app = express(); 
 
-app.engine('handlebars', handlebars.engine); 
-app.set('view engine', 'handlebars');
 app.use(morgan('dev')); 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false })); 
@@ -25,9 +22,9 @@ app.get('/', async (req, res) => {
 });
 
 app.post('/', async (req, res) => { 
-    const username = req.body.username;
-    const password = req.body.password;
-    await db.insertUserpass(username, password);
+    const team1Name = req.body.team1Name;
+    const team1Score = req.body.team1Score;
+    await db.insertGame(team1Name, team1Score);
     const all = await db.getAll();
     console.log(all);
     res.json(all);
@@ -40,8 +37,8 @@ app.use((req, res) => {
 db.init() 
     .then(() => { 
         app.listen(53140, () => console.log('The server is up and running...')); 
-        db.insertUserpass("test1", "test2");
-        db.insertUserpass("test3", "test4");
+        db.insertGame("test", "test2");
+        db.insertGame("user", "pass");
     }) 
     .catch(err => { 
         console.log('Problem setting up the database'); 
