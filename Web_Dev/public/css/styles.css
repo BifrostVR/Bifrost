@@ -1,5 +1,6 @@
   /*Fill the screen*/
   body{
+    font-family: Verdana, sans-serif;
     margin: 0;
     padding: 0;
     background-color: #000000;
@@ -18,42 +19,55 @@
     width: 90px;
   }
   /* edit by em starts here */
-
   .user-info img{
     display: block;
     margin-left: auto;
     margin-right: auto;
     width: 25%;
   }
-  
   .user-info input {
     display: block;
     margin: auto;
     width: 50%;
   }
-
   .user-info label {
     display: block;
     margin: auto;
     width: 50%;
   }
-
   .output{
     display: block;
     padding-top: 100px;
     margin: auto;
     width: 50%;
   }
-
 /* edit by em stops here */
-  .content {
+  .content{
+    max-width: 55%;
+    margin: 0 auto;
+  }
+  .create-post-container {
     display: flex;
+    align-items: center;
+    flex-direction: column;
+    background-color: #8e8e8e;
+    margin-top: 10px;
+  }
+  .welcome-text {
+    display: flex;
+    align-items: center;
     justify-content: center;
+  }
+  .file-picker {
+    margin: 10px;
+  }
+  .create-post-button {
+    margin-bottom: 10px;
   }
   .post-container {
     border: 5px solid #5aa3c4;
     background-color: #000000;
-    max-width: 55%;
+    margin: 0 auto;
     margin-top: 10px;
   }
   .post-container .post-profile img {
@@ -63,12 +77,10 @@
   }
   .post-container .username {
     color: rgb(177, 177, 177);
-    font-family: Verdana, sans-serif;
     padding-left: 10px;
   }
   .post-container .like-counter {
     color: red;
-    font-family: Verdana, sans-serif;
     padding-left: 10px;
     display: flex;
     justify-content: space-between;
@@ -78,9 +90,8 @@
     margin-right: 10px;
     width: 20px;
     cursor: pointer;
-}
+  }
   .left-sidebar{
-    font-family: Verdana, sans-serif;
     position: fixed;
     top: 0;
     bottom: 0;
@@ -102,7 +113,6 @@
     margin-bottom: 20px;
   }
   .right-sidebar{
-    font-family: Verdana, sans-serif;
     position: fixed;
     top: 0;
     bottom: 0;
