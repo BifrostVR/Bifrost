@@ -4,7 +4,7 @@
         <!--Gurantees use of correct and updated characters for HTML5-->
         <meta charset="UTF-8">
         <title>Bifrost - The Metaverse at your Fingertips</title>
-        <link rel="stylesheet" href="styles.css" type="text/css">
+        <link rel="stylesheet" href="css/styles.css" type="text/css">
     </head> 
     <body>
         <header>
@@ -28,18 +28,22 @@
         <div class="content">
             <div>
                 <div class="create-post-container">
-                    <div class="welcome-text">
-                        <p>Add to the Multiverse</p>
-                    </div>
-                    <div>
-                        <textarea class="input-text"></textarea> 
-                    </div>
-                    <div class="file-picker">
-                        <input type="file"/>
-                    </div>
-                    <div class="create-post-button">
-                        <button>Send</button>
-                    </div>
+                    <form id="newPostForm">
+                        <div class="welcome-text">
+                            <p>Add to the Multiverse</p>
+                        </div>
+                        <div class="form-group">
+                            <label for="post-textarea">What do you want to say...</label>
+                            <input type="textarea" class="form-control" name="post-textarea" id="post-textarea"></textarea> 
+                        </div>
+                        <div class="form-group file-picker">
+                            <label for="post-file">Attach a file...</label>
+                            <input type="file" class="form-control" name="post-file" id="post-file"></textarea> 
+                        </div>
+                        <div class="create-post-button">
+                            <button id="submitButton" class="btn btn-primary">Send</button>
+                        </div>
+                    </form>
                 </div>
             </div>
             <div class="post-container">
@@ -71,4 +75,61 @@
         </div>
         </main>
     </body>
+    <script> 
+        document.addEventListener("DOMContentLoaded", (event) => { 
+            //alert("The page has been loaded."); 
+        }); 
+     
+        document.getElementById("submitButton").addEventListener("click", async (e) => { 
+            e.preventDefault(); 
+            console.log("Submit button pressed");
+            try { 
+                const postTextArea = document.getElementById("post-textarea").value; 
+                const postFile = document.getElementById("post-file").value;
+     
+                const userData = { 
+                    postTextArea: postTextArea,
+                    postFile: postFile,
+                }; 
+     
+                const fetchConfigData = { 
+                    method: "POST", 
+                    body: JSON.stringify(userData),  
+                    headers: { 
+                        "Content-Type": "application/json" 
+                    } 
+                }; 
+     
+                const response = await fetch("/", fetchConfigData); 
+             
+                if(response.ok) { 
+                    const games = await response.json(); 
+                    loadTableWithGames(games); 
+                } else { 
+                    console.log("Error with the response data"); 
+                } 
+     
+            } catch (err) { 
+                console.log(`Error: ${err}`); 
+            } 
+        }); 
+     
+        function loadTableWithGames(games) { 
+            const table = document.getElementById("gamesTable"); 
+            const tableBody = table.children[1]; 
+     
+            tableBody.innerHTML = ""; 
+     
+            games.forEach(game => { 
+                const tr = document.createElement("tr");
+                const team1NameTd = document.createElement("td"); 
+                team1NameTd.innerHTML = `${game["Team1Name"]}`; 
+                const team1ScoreTd = document.createElement("td"); 
+                team1ScoreTd.innerHTML = `${game["Team2Name"]}`;
+                tr.appendChild(team1NameTd); 
+                tr.appendChild(team1ScoreTd);
+                tableBody.appendChild(tr); 
+            }); 
+        }
+        </script>
 </html>

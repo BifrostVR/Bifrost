@@ -1,0 +1,13 @@
+{
+    "compilerOptions":
+    {
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+
+        "esModuleInterop": true,
+        "declaration": true,
+        "outDir": "./dist"
+    },
+    
+    "exclude": ["dist"]
+}

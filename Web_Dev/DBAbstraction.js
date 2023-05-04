@@ -30,7 +30,7 @@ class DBAbstraction {
     } 
  
     createTables() { 
-        const sql = ` 
+        const sqlgames = ` 
             CREATE TABLE IF NOT EXISTS 'Games' (  
                 'Id' INTEGER,  
                 'Team1Name' TEXT,  
@@ -39,10 +39,19 @@ class DBAbstraction {
             );             
         `; 
 
+        const sqlpost = ` 
+            CREATE TABLE IF NOT EXISTS 'Posts' (  
+                'Id' INTEGER,  
+                'PostTextArea' TEXT,  
+                'PostFile' TEXT,
+                PRIMARY KEY('Id') 
+            );             
+        `;
+
         //
  
         return new Promise((resolve, reject) => { 
-            this.db.run(sql, [], (err) => {                 
+            this.db.run(sqlgames, [], (err) => {                 
                 if(err) { 
                     reject(err); 
                 } else { 
@@ -54,9 +63,9 @@ class DBAbstraction {
 
     insertGame(team1Name, team2Name)
     {
-        const sql = 'INSERT INTO Games (Team1Name, Team2Name) VALUES (?, ?);'; 
+        const sqlgames = 'INSERT INTO Games (Team1Name, Team2Name) VALUES (?, ?);'; 
         return new Promise((resolve, reject) => { 
-            this.db.run(sql, [team1Name, team2Name], (err) => {                 
+            this.db.run(sqlgames, [team1Name, team2Name], (err) => {                 
                 if(err) { 
                     reject(err); 
                 } else { 
@@ -68,13 +77,13 @@ class DBAbstraction {
 
     getAll()
     {
-        const sql = ` 
+        const sqlgames = ` 
             SELECT Team1Name, Team2Name 
             FROM Games 
         `; 
  
         return new Promise((resolve, reject) => { 
-            this.db.all(sql, [], (err, rows) => {                 
+            this.db.all(sqlgames, [], (err, rows) => {                 
                 if(err) { 
                     reject(err); 
                 } else { 
