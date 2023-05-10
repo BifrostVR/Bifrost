@@ -1,4 +1,4 @@
-// Compile to exe: x86_64-w64-mingw32-g++ -static BifrostVR.cpp deps/ggml.o deps/whisper.o -o test.exe -L./libs/ -lopenvr_api -lSDL2 -lmingw32 -lopengl32 -lgdi32 -luser32 -lkernel32 -limm32 -lversion -lwinmm -lsetupapi -loleaut32 -lole32
+// Compile to exe: x86_64-w64-mingw32-g++ -static BifrostVR.cpp deps/ggml.o deps/whisper.o deps/sqlite3.o -o test.exe -L./libs/ -lopenvr_api -lSDL2 -lmingw32 -lopengl32 -lgdi32 -luser32 -lkernel32 -limm32 -lversion -lwinmm -lsetupapi -loleaut32 -lole32
 // The "openvr_api.dll" file must be present in the location of output exe to run it
 
 #define CNFG_IMPLEMENTATION
@@ -6,11 +6,12 @@
 #include "deps/rawdraw_sf.h"
 #include "deps/openvr.h"
 #include "deps/whisper.h"
+#include "deps/sqlite3.h"
 #include "audio_async.h"
 #include <stdio.h>
 #include <time.h>
 #include <fstream>
-#include <sqlite3.h>
+#include <vector>
 
 using namespace::vr; // "openvr.h" uses the vr namespace, and with openvr making the majority of the cript, it's namespace is preferred
 
@@ -20,14 +21,23 @@ void HandleButton( int x, int y, int button, int bDown ) { }
 void HandleMotion( int x, int y, int mask ) { }
 void HandleDestroy() { }
 
+// VR defs
 VROverlayHandle_t ulHandle; // OpenVR application ID
 TrackedDeviceIndex_t leftHandID; // ID of left remote
 TrackedDeviceIndex_t rightHandID; // ID of right remote
 
-std::fstream sFile; // Server info
+// SQL defs
+sqlite3 * db;
+sqlite3_stmt * stmt;
+std::vector<std::string> posts; // Saved posts
+int max = -10; // Trakcs the maximum position in posts
+int cur = -10; // Tracks the current position in posts
+bool notif = false;
+char* err;
+bool con; // Updates 
 
 int WIDTH = 256;
-int HEIGHT = 64;
+int HEIGHT = 256;
 
 // Bifrost original functions
 bool BindHand()
@@ -68,6 +78,24 @@ void RawToVR(GLuint texture) {
     VROverlay()->SetOverlayTexture( ulHandle, &tex ); // Send texture into OpenVR
        
     CNFGSwapBuffers(); // Prepares rawdraw for next frame 
+}
+
+void UpdateFeed() {
+    sqlite3_open("//169.254.136.180/bifrost_texts/testdb", &db);
+    int check = sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS Posts(Id INT, PostTextArea TEXT, PostFile TEXT, PRIMARY KEY('Id'));", NULL, NULL, &err);
+    con = check == SQLITE_OK;
+    sqlite3_prepare_v2(db, "SELECT * FROM Posts", -1, &stmt, 0);
+    posts.clear();
+    while(sqlite3_step(stmt) == SQLITE_ROW) posts.push_back(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1))); // Pushes to posts
+    sqlite3_close(db);
+    
+    if (max != posts.size() - 1) { // Handles altering passive and active uses of the feed
+        if (max < posts.size() - 1) notif = true;
+        if (cur == max) cur = posts.size() - 1;
+        max = posts.size() - 1;
+        if (cur > max) cur = max;
+        if (cur == -1) cur = max;
+    }
 }
 
 int main()
@@ -131,13 +159,18 @@ int main()
     bool post = false; // In the post menu
     bool recording = false; // Actively recording
     bool msg = false; // Message made
+    bool aFail = false; // Handles audio failure
     bool dcrfix = false; // "Right click" triggers on dpad down AND up, this fixes that
     bool dclfix = false; // "Left click" triggers on trigger pull AND release, this fixes that
+    
+    // Misc
     bool hands = false;
-    std::string content;
+    std::string content; 
     time_t time1, time2;
     while(CNFGHandleInput())
     {
+        UpdateFeed(); // Updates local SQL vector
+
         CNFGBGColor = 0x00000000; //Transparent background
         CNFGClearFrame();
 
@@ -173,6 +206,7 @@ int main()
                         if (!recording && !msg) post = !post;
                         else if (!recording && msg) {
                             msg = false;
+                            aFail = false;
                         }
                     }
                     else if (cEvent.data.mouse.button == VRMouseButton_Right && dcrfix) dcrfix = false;
@@ -186,21 +220,23 @@ int main()
                             CNFGDrawText("Processing...", 3);
                             RawToVR(texture);
                             msg = audio.end(pcmf32);
-                            msg = true;
                             if (msg) {
                                 content = "";
                                 whisper_full(ctx, wparams, pcmf32.data(), pcmf32.size()); // Pushes all audio data to whisper
                                 const int n_segments = whisper_full_n_segments(ctx);
                                 for (int i = 0; i < n_segments; ++i) content += whisper_full_get_segment_text(ctx, i); // Converts listed words to string
-                                if (content.length() >= 3) if (content.substr(content.length() - 3,3) == "you") content.erase(content.length() - 3, 3); // Fixes silcene error
                             }
                             else {
                                 content = "Audio failed";
                                 msg = true;
+                                aFail = true;
                             }
                         }
-                        else if (!recording && msg) {
-                            // This is where we will post to server, for now only bools are handled
+                        else if (!recording && msg && !aFail) {
+                            sqlite3_open("//169.254.136.180/bifrost_texts/testdb", &db); // Pushes from whisper to server
+                            std::string query = "INSERT INTO Posts (PostTextArea, PostFile) VALUES ('" + content + "', NULL);";
+                            sqlite3_exec(db, query.c_str(), NULL, NULL, &err); // Executes query
+                            sqlite3_close(db);
                             post = false;
                             msg = false;
                         }
@@ -213,27 +249,19 @@ int main()
                     open = false;
                     closed = true;
                 }
+                notif = false;
             }
 
             // This if else tree turns the interactions into texture changes on the overlay
             if (open) {
                 if (!post) {
-                    bool con = true;
-                    sFile.open("//169.254.136.180/bifrost_texts/Test.txt", std::ios::app | std::ios::in); // Connects to the servers output
-                    if (!sFile.is_open()) {
-                        CNFGDrawText("Failed to fetch server", 3);
-                        con = false;
-                    }   
-                    if (con) {
-                        // Will be reformated for final build, current format is for proof of concept only
-                        std::string st; // Server texts
-                        getline(sFile, st);
-                        CNFGDrawText(st.c_str(), 3 );
-                    }
+                    if (!con) CNFGDrawText("Failed to fetch server", 3);
+                    else if (cur < 0) CNFGDrawText("Not much here...", 3);
+                    else CNFGDrawText(posts[cur].c_str(), 3 );
                 }
                 else {
                     if (!recording && !msg) CNFGDrawText("Pull trigger to record message", 3);
-                    else if (!recording && msg) CNFGDrawText(content.c_str(), 3); // USes the raw string because it hasn't
+                    else if (!recording && msg) CNFGDrawText(content.c_str(), 3); // Uses the raw string because it hasn't been posted yet
                     else CNFGDrawText("Pull trigger to end message", 3);
                 }
             }
@@ -246,8 +274,6 @@ int main()
                 CNFGDrawText( "BF", 3 );
             }
         }
-
-        if (sFile.is_open()) sFile.close(); // Disconects after finilization of text
         RawToVR(texture);
     }
     

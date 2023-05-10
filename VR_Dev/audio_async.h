@@ -4,7 +4,6 @@
 #define SDL_MAIN_HANDLED
 
 #include "deps/SDL2/SDL.h"
-#include <vector>
 #include <regex>
 #include <atomic>
 #include <thread>
@@ -73,8 +72,8 @@ public:
         if (!m_running) return false;
         SDL_PauseAudioDevice(m_dev_id_in, 1);
         m_running = false;
-        result.resize(gBufferByteSize / sizeof(float));
-        std::memcpy(result.data(), (float*)gRecordingBuffer, gBufferByteSize);
+        result.resize(gBufferBytePosition / sizeof(float));
+        std::memcpy(result.data(), (float*)gRecordingBuffer, gBufferBytePosition); // gBufferBytePosition is used so that only the length containing audio is returned
         gBufferBytePosition = 0;
         return true;
     }
