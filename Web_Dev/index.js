@@ -45,5 +45,3 @@ dbGames.init()
         console.log('Problem setting up the database'); 
         console.log(err); 
     });
-
- 
