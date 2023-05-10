@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <fstream>
+#include <sqlite3.h>
 
 using namespace::vr; // "openvr.h" uses the vr namespace, and with openvr making the majority of the cript, it's namespace is preferred
 
@@ -92,7 +93,7 @@ int main()
     bounds.vMax = 1;
     VROverlay()->SetOverlayTextureBounds(ulHandle, &bounds);
     VROverlay()->ShowOverlay(ulHandle);
-   
+    
     GLuint texture = 0; // Prepare OpenGL texture for future binding
     {
         glGenTextures( 1, &texture );
@@ -112,18 +113,17 @@ int main()
         wparams.single_segment   = false;
         wparams.max_tokens       = 32;
         wparams.language         = "en";
-        wparams.n_threads        = std::max(1, std::min(8, (int32_t) std::thread::hardware_concurrency()));
+        wparams.n_threads        = std::max(1, std::min(7, (int32_t) std::thread::hardware_concurrency()));
         wparams.audio_ctx        = 768;
         wparams.speed_up         = false;
         wparams.temperature_inc  = wparams.temperature_inc;
         wparams.prompt_tokens    = nullptr;
         wparams.prompt_n_tokens  = 0;
     }
-    const int n_samples_30s  = (1e-3*30000.0)*WHISPER_SAMPLE_RATE;
+    whisper_context * ctx = whisper_init_from_file("ggml-base.en.bin"); // Engages whisper.h
     audio_async audio; // Prepares for audio capture
     audio.init();
-    whisper_context * ctx = whisper_init_from_file("ggml-base.en.bin"); // Engages whisper.h
-    std::vector<float> pcmf32 (n_samples_30s, 0.0f);
+    std::vector<float> pcmf32;
 
     // Event bools
     bool open = false; // Open beyond the icon
@@ -179,19 +179,25 @@ int main()
                     if (cEvent.data.mouse.button == VRMouseButton_Left && post && !dclfix) {
                         dclfix = true;
                         if (!recording && !msg) {
-                            recording = true;
-                            audio.clear(); // Clears audio so audio is only used from here
+                            recording = audio.start();
                         }
                         else if (recording && !msg) {
-                            msg = true;
                             recording = false;
                             CNFGDrawText("Processing...", 3);
                             RawToVR(texture);
-                            content = "Whisper Works";
-                            audio.get(pcmf32);
-                            whisper_full(ctx, wparams, pcmf32.data(), pcmf32.size()); // Pushes all audio data to whisper
-                            const int n_segments = whisper_full_n_segments(ctx);
-                            for (int i = 0; i < n_segments; ++i) content += whisper_full_get_segment_text(ctx, i); // Converts listed words to string
+                            msg = audio.end(pcmf32);
+                            msg = true;
+                            if (msg) {
+                                content = "";
+                                whisper_full(ctx, wparams, pcmf32.data(), pcmf32.size()); // Pushes all audio data to whisper
+                                const int n_segments = whisper_full_n_segments(ctx);
+                                for (int i = 0; i < n_segments; ++i) content += whisper_full_get_segment_text(ctx, i); // Converts listed words to string
+                                if (content.length() >= 3) if (content.substr(content.length() - 3,3) == "you") content.erase(content.length() - 3, 3); // Fixes silcene error
+                            }
+                            else {
+                                content = "Audio failed";
+                                msg = true;
+                            }
                         }
                         else if (!recording && msg) {
                             // This is where we will post to server, for now only bools are handled
