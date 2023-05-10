@@ -30,28 +30,17 @@ class DBAbstraction {
     } 
  
     createTables() { 
-        const sqlgames = ` 
-            CREATE TABLE IF NOT EXISTS 'Games' (  
-                'Id' INTEGER,  
-                'Team1Name' TEXT,  
-                'Team2Name' TEXT,
-                PRIMARY KEY('Id') 
-            );             
-        `; 
-
-        const sqlpost = ` 
+        const sqlposts = ` 
             CREATE TABLE IF NOT EXISTS 'Posts' (  
-                'Id' INTEGER,  
+                'Id' INT AUTO_INCREMENT,  
                 'PostTextArea' TEXT,  
                 'PostFile' TEXT,
                 PRIMARY KEY('Id') 
             );             
         `;
 
-        //
- 
         return new Promise((resolve, reject) => { 
-            this.db.run(sqlgames, [], (err) => {                 
+            this.db.run(sqlposts, [], (err) => {                 
                 if(err) { 
                     reject(err); 
                 } else { 
@@ -61,11 +50,11 @@ class DBAbstraction {
         }); 
     }
 
-    insertGame(team1Name, team2Name)
+    insertPost(userText, userFile)
     {
-        const sqlgames = 'INSERT INTO Games (Team1Name, Team2Name) VALUES (?, ?);'; 
+        const sqlposts = 'INSERT INTO Posts (PostTextArea, PostFile) VALUES (?, ?);'; 
         return new Promise((resolve, reject) => { 
-            this.db.run(sqlgames, [team1Name, team2Name], (err) => {                 
+            this.db.run(sqlposts, [userText, userFile], (err) => {                 
                 if(err) { 
                     reject(err); 
                 } else { 
@@ -77,13 +66,13 @@ class DBAbstraction {
 
     getAll()
     {
-        const sqlgames = ` 
-            SELECT Team1Name, Team2Name 
-            FROM Games 
+        const sqlPosts = ` 
+            SELECT PostTextArea, PostFile 
+            FROM Posts 
         `; 
  
         return new Promise((resolve, reject) => { 
-            this.db.all(sqlgames, [], (err, rows) => {                 
+            this.db.all(sqlPosts, [], (err, rows) => {                 
                 if(err) { 
                     reject(err); 
                 } else { 
@@ -93,59 +82,4 @@ class DBAbstraction {
         }); 
     } 
     }
- 
-    // insertLegend(firstName, lastName, birthDate) { 
-    //     const sql = 'INSERT INTO CSLegends (FirstName, LastName, BirthDate) VALUES (?, ?, ?);'; 
-    //     return new Promise((resolve, reject) => { 
-    //         this.db.run(sql, [firstName, lastName, birthDate], (err) => {                 
-    //             if(err) { 
-    //                 reject(err); 
-    //             } else { 
-    //                 resolve(); 
-    //             } 
-    //         }); 
-    //     }); 
-    // } 
- 
-    // getLegendByLastName(lastName) { 
-    //     const sql = ` 
-    //         SELECT FirstName, LastName, BirthDate 
-    //         FROM CSLegends 
-    //         WHERE LastName = ? COLLATE NOCASE; 
-    //     `; 
-    //     return new Promise((resolve, reject) => { 
-    //         this.db.get(sql, [lastName], (err, row) => {                 
-    //             if(err) { 
-    //                 reject(err); 
-    //             } else { 
-    //                 resolve(row); 
-    //             } 
-    //         }); 
-    //     }); 
-    // } 
-     
-    // getAllLegendsBornOnOrAfter(year) { 
-         
-    //     if(!Number.isInteger(year)) { 
-    //         return null; 
-    //     } 
- 
-//         const sql = ` 
-//             SELECT FirstName, LastName, BirthDate 
-//             FROM CSLegends 
-//             WHERE BirthDate >= ?; 
-//         `; 
- 
-//         return new Promise((resolve, reject) => { 
-//             this.db.all(sql, [`${year}-01-01`], (err, rows) => {                 
-//                 if(err) { 
-//                     reject(err); 
-//                 } else { 
-//                     resolve(rows); 
-//                 } 
-//             }); 
-//         }); 
-//     } 
-// } 
-
 module.exports = DBAbstraction;
