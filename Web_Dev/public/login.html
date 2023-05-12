@@ -18,40 +18,36 @@
                     <p></p>
             </div>
         </main>
-          <hr/>
-Game Results
-<table id="gamesTable" class="table table-bordered table-hover"> 
-    <thead> 
-        <th>Username</th><th>Password</th>
-    </thead> 
-    <tbody>
-            <tr> 
-                <td> 
-                    {{this/Team1Name}}
-                </td> 
-                <td> 
-                    {{this/Team2Name}} 
-                </td>             
-            </tr>
-    </tbody> 
-</table> 
-
-<h4> 
-    Enter in information: 
-</h4> 
- 
-<form id="newGameForm"> 
-    <div class="form-group"> 
-        <label for="team1Name">Username</label> 
-        <input type="text" class="form-control" name="team1Name" id="team1Name"> 
-    </div>
-    <div class="form-group"> 
-        <label for="team2Name">Password</label> 
-        <input type="text" class="form-control" name="team2Name" id="team2Name"> 
-    </div>   
-    <hr/>
-    <button id="submitButton" class="btn btn-primary">Submit</button> 
-</form> 
+        <table id="gamesTable" class="table table-bordered table-hover">
+            <thead> 
+                <th>Username</th><th>Password</th>
+            </thead> 
+            <tbody>
+                    <tr> 
+                        <td> 
+                            {{this/Team1Name}}
+                        </td> 
+                        <td> 
+                            {{this/Team2Name}} 
+                        </td>             
+                    </tr>
+            </tbody> 
+            <h4> 
+                Enter in information: 
+            </h4> 
+        </table> 
+        <form id="newGameForm" class="newGameForm"> 
+            <div class="form-group"> 
+                <label for="team1Name">Username</label> 
+                <input type="text" class="form-control" name="team1Name" id="team1Name"> 
+            </div>
+            <div class="form-group"> 
+                <label for="team2Name">Password</label> 
+                <input type="text" class="form-control" name="team2Name" id="team2Name"> 
+            </div>   
+            <hr/>
+            <button id="submitButton" class="btn btn-primary">Submit</button> 
+        </form> 
  
 <script> 
     document.addEventListener("DOMContentLoaded", (event) => { 
