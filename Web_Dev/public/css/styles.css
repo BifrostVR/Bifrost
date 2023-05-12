@@ -47,6 +47,9 @@ header {
 .table {
   color: white
 }
+.post-text{
+  color: white
+}
 /* edit by em stops here */
 .content {
   max-width: 55%;
