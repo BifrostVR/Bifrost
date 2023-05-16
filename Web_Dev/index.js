@@ -6,7 +6,8 @@ const bodyParser = require('body-parser');
 const DBAbstraction = require('./DBAbstraction');
 const path = require('path');
 
-const filePathPosts = path.join(__dirname, 'data', 'posts.sqlite');
+// const filePathPosts = path.join('/home/pi', 'Bifrost', 'posts.sqlite'); // For server use
+const filePathPosts = path.join(__dirname, 'data', 'posts.sqlite'); // For local use
 const dbPosts = new DBAbstraction(filePathPosts);
 
 const app = express();

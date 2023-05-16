@@ -1,5 +1,4 @@
 // Compile to exe: x86_64-w64-mingw32-g++ -static BifrostVR.cpp deps/ggml.o deps/whisper.o deps/sqlite3.o -o test.exe -L./libs/ -lopenvr_api -lSDL2 -lmingw32 -lopengl32 -lgdi32 -luser32 -lkernel32 -limm32 -lversion -lwinmm -lsetupapi -loleaut32 -lole32
-// The "openvr_api.dll" file must be present in the location of output exe to run it
 
 #define CNFG_IMPLEMENTATION
 #define CNFGOGL
@@ -27,6 +26,7 @@ TrackedDeviceIndex_t leftHandID; // ID of left remote
 TrackedDeviceIndex_t rightHandID; // ID of right remote
 
 // SQL defs
+const char * server = "//169.254.136.180/bifrost_texts/posts.sqlite"; // Written here for easier updating
 sqlite3 * db;
 sqlite3_stmt * stmt;
 std::vector<std::string> posts; // Saved posts
@@ -81,8 +81,8 @@ void RawToVR(GLuint texture) {
 }
 
 void UpdateFeed() {
-    sqlite3_open("//169.254.136.180/bifrost_texts/testdb", &db);
-    int check = sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS Posts(Id INT, PostTextArea TEXT, PostFile TEXT, PRIMARY KEY('Id'));", NULL, NULL, &err);
+    sqlite3_open(server, &db);
+    int check = sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS Posts(Id INT AUTO_INCREMENT, PostTextArea TEXT, PostFile TEXT, PRIMARY KEY('Id'));", NULL, NULL, &err);
     con = check == SQLITE_OK;
     sqlite3_prepare_v2(db, "SELECT * FROM Posts", -1, &stmt, 0);
     posts.clear();
@@ -233,7 +233,7 @@ int main()
                             }
                         }
                         else if (!recording && msg && !aFail) {
-                            sqlite3_open("//169.254.136.180/bifrost_texts/testdb", &db); // Pushes from whisper to server
+                            sqlite3_open(server, &db); // Pushes from whisper to server
                             std::string query = "INSERT INTO Posts (PostTextArea, PostFile) VALUES ('" + content + "', NULL);";
                             sqlite3_exec(db, query.c_str(), NULL, NULL, &err); // Executes query
                             sqlite3_close(db);
