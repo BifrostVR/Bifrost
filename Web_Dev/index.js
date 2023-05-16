@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const DBAbstraction = require('./DBAbstraction');
 const path = require('path');
+const start = performance.now();
 
 // const filePathPosts = path.join('/home/pi', 'Bifrost', 'posts.sqlite'); // For server use
 const filePathPosts = path.join(__dirname, 'data', 'posts.sqlite'); // For local use
@@ -19,6 +20,9 @@ app.use(bodyParser.json());
 
 app.get('/', async (req, res) => {
     try {
+        const end = performance.now();
+        const responseTime = end - start;
+        console.log(`Response time: ${responseTime} milliseconds`);
         const allPosts = await dbPosts.getAll();
         const renderedHTML = await ejs.renderFile('views/allPostsView.ejs', { posts: allPosts });
         res.render('allPosts', { posts: allPosts, renderedHTML: renderedHTML });

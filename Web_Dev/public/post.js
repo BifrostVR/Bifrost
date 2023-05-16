@@ -59,11 +59,11 @@ function fetchAndDisplayPosts() {
         usernameElement.appendChild(usernameText);
 
         // Create the post profile element
-        var postProfileElement = document.createElement("div");
-        postProfileElement.className = "post-profile";
-        var profileImage = document.createElement("img");
-        profileImage.src = "picture.png";
-        postProfileElement.appendChild(profileImage);
+        // var postProfileElement = document.createElement("div");
+        // postProfileElement.className = "post-profile";
+        // var profileImage = document.createElement("img");
+        // profileImage.src = "picture.png";
+        // postProfileElement.appendChild(profileImage);
 
         // Create the like counter element
         var likeCounterElement = document.createElement("div");
@@ -93,7 +93,7 @@ function fetchAndDisplayPosts() {
 
         // Append all elements to the post container
         newPostContainer.appendChild(usernameElement);
-        newPostContainer.appendChild(postProfileElement);
+        //newPostContainer.appendChild(postProfileElement);
         newPostContainer.appendChild(likeCounterElement);
         textBoxesElement.appendChild(postTextElement);
         textBoxesElement.appendChild(postFileElement);
