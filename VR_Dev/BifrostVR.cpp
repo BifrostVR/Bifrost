@@ -1,4 +1,4 @@
-// Compile to exe: x86_64-w64-mingw32-g++ -static BifrostVR.cpp deps/ggml.o deps/whisper.o deps/sqlite3.o -o test.exe -L./libs/ -lopenvr_api -lSDL2 -lmingw32 -lopengl32 -lgdi32 -luser32 -lkernel32 -limm32 -lversion -lwinmm -lsetupapi -loleaut32 -lole32
+// Compile to exe: x86_64-w64-mingw32-g++ -static BifrostVR.cpp deps/ggml.o deps/whisper.o deps/sqlite3.o -o BifrostVR.exe -L./libs/ -lopenvr_api -lSDL2 -lmingw32 -lopengl32 -lgdi32 -luser32 -lkernel32 -limm32 -lversion -lwinmm -lsetupapi -loleaut32 -lole32
 
 #define CNFG_IMPLEMENTATION
 #define CNFGOGL
@@ -9,7 +9,6 @@
 #include "audio_async.h"
 #include <stdio.h>
 #include <time.h>
-#include <fstream>
 #include <vector>
 
 using namespace::vr; // "openvr.h" uses the vr namespace, and with openvr making the majority of the cript, it's namespace is preferred
@@ -166,10 +165,16 @@ int main()
     // Misc
     bool hands = false;
     std::string content; 
-    time_t time1, time2;
+    time_t ct1, ct2; // Closing timers
+    time_t pt1, pt2; // Post pull timers;
+    time(&pt1);
     while(CNFGHandleInput())
     {
-        UpdateFeed(); // Updates local SQL vector
+        time(&pt2);
+        if (difftime(pt2, pt1) > 3) { // Puts a limit on how fast UpdateFeed is called to prevent corruprtion
+            time(&pt1);
+            UpdateFeed(); // Updates local SQL vector
+        }
 
         CNFGBGColor = 0x00000000; //Transparent background
         CNFGClearFrame();
@@ -194,7 +199,7 @@ int main()
                     if (cEvent.data.mouse.button == VRMouseButton_Left) {
                         open = true;
                         closed = false;
-                        time(&time1);
+                        time(&ct1);
                     }
                 }
             }
@@ -242,10 +247,10 @@ int main()
                         }
                     }
                     else if (cEvent.data.mouse.button == VRMouseButton_Left && post && dclfix) dclfix = false;
-                    time(&time1);
+                    time(&ct1);
                 }
-                time(&time2);
-                if (difftime(time2, time1) > 5 && !post) {
+                time(&ct2);
+                if (difftime(ct2, ct1) > 5 && !post) {
                     open = false;
                     closed = true;
                 }
