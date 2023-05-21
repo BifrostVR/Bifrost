@@ -1,100 +1,102 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <!--Gurantees use of correct and updated characters for HTML5-->
-        <meta charset="UTF-8">
-        <title>Bifrost - The Metaverse at your Fingertips</title>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-        <link rel="stylesheet" href="css/styles.css" type="text/css">
-    </head>
-    <body>
-        <header>
-            <div class="logo">
-                <img src="logo.png" alt="Bifrost Logo">
-            </div>
-            <div class="login">
-                <a href="login.html"><img src="login.png" alt="Login"></a>
-            </div>
-        </header>
-        <main>
-            <div class="left-sidebar">
-                <div class="user-info">
-                    <div class="profile-picture">
-                        <img src="picture.png" alt="Profile Picture">
-                    </div>
-                    <div class="left-sidebar-text">
-                        <p>"Username"</p>
-                        <p>Level: 0000</p>
-                        <p>Impressions</p>
-                    </div>
+
+<head>
+    <!--Gurantees use of correct and updated characters for HTML5-->
+    <meta charset="UTF-8">
+    <title>Bifrost - The Metaverse at your Fingertips</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="css/styles.css" type="text/css">
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <img src="logo.png" alt="Bifrost Logo">
+        </div>
+        <div class="login">
+            <a href="login.html"><img src="login.png" alt="Login"></a>
+        </div>
+    </header>
+    <main>
+        <div class="left-sidebar">
+            <div class="user-info">
+                <div class="profile-picture">
+                    <img src="picture.png" alt="Profile Picture">
+                </div>
+                <div class="left-sidebar-text">
+                    <p>"Username"</p>
+                    <p>Level: 0000</p>
+                    <p>Impressions</p>
                 </div>
             </div>
-            <div class="content" id="content">
-                <div>
-                    <div class="create-post-container">
-                        <form id="newPostForm">
-                            <div class="welcome-text">
-                                <p>Add to the Multiverse</p>
-                            </div>
-                            <div class="form-group">
-                                <label for="post-textarea">What do you want to say...</label>
-                                <input type="textarea" class="form-control" name="post-textarea" id="post-textarea"></textarea> 
-                            </div>
-                            <div class="form-group file-picker">
-                                <label for="post-file">Attach a file...</label>
-                                <input type="file" class="form-control" name="post-file" id="post-file"></textarea> 
-                            </div>
-                        </form>
-                        <div class="create-post-button">
-                            <button id="submitButton" onclick="createNewElement()">Send</button>
-                            <script src="post.js"></script>
+        </div>
+        <div class="content" id="content">
+            <div>
+                <div class="create-post-container">
+                    <form id="newPostForm">
+                        <div class="welcome-text">
+                            <p>Add to the Multiverse</p>
                         </div>
-                    </div>
-                </div>
-                <div id="post">
-                    <div class="post-container">
-                        <div class="username">
-                            <p>User</p>
+                        <div class="form-group">
+                            <label for="post-textarea">What do you want to say...</label>
+                            <input type="textarea" class="form-control" name="post-textarea"
+                                id="post-textarea"></textarea>
                         </div>
-                        <div class="post-profile">
-                            <img src="picture.png" />
+                        <div class="form-group file-picker">
+                            <label for="post-file">Attach a file...</label>
+                            <input type="file" class="form-control" name="post-file" id="post-file"></textarea>
                         </div>
-                        <div class="like-counter" id="like-counter" data-count="0">
-                            <p>0 likes</p>
-                            <div class="like-button">
-                                <img src="unliked.png" id="like-button" onclick="incrementLike()">
-                                <script src="like.js"></script>
-                            </div>
-                        </div>
-                        <div class="text-boxes">
-                            <p class="post-text">Sample post text</p>
-                            <p class="post-file">Sample file content</p>
-                        </div>
-                    </div>                                       
-                </div>
-                </div>
-            </div>
-            <div class="right-sidebar">
-                <div class="friends-list">
-                    <div class="right-sidebar-text">
-                        <p>Friends</p>
-                        <img src="Plus.png" alt="Open Popup"
-                            onclick="showPopup()" style="cursor: pointer;">
-                        <div id="popup" class="popup" style="display: none;">
-                            <span class="close" onclick="hidePopup()">&times;</span>
-                            <input type="text" id="usernameInput"
-                                placeholder="Enter username">
-                            <p class="statusText">User found ph</p>
-                            <button onclick="addFriend()">Add Friend</button>
-                            <script src="popUp.js"></script>
-                        </div>
-                    </div>
-                    <div class="friend">
-                        <img src="picture.png" alt="Profile Picture">
-                        <p>Blake</p>
+                    </form>
+                    <div class="create-post-button">
+                        <button id="submitButton" onclick="createNewElement()">Send</button>
+                        <script src="post.js"></script>
                     </div>
                 </div>
             </div>
-        </main>
-    </body>
+            <div id="post">
+                <div class="post-container">
+                    <div class="username">
+                        <p>User</p>
+                    </div>
+                    <div class="post-profile">
+                        <img src="picture.png" />
+                    </div>
+                    <div class="like-counter" id="like-counter" data-count="0">
+                        <p>0 likes</p>
+                        <div class="like-button">
+                            <img src="unliked.png" id="like-button" onclick="incrementLike()">
+                            <script src="like.js"></script>
+                        </div>
+                    </div>
+                    <div class="text-boxes">
+                        <p class="post-text">Sample post text</p>
+                        <p class="post-file">Sample file content</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+        <div class="right-sidebar">
+            <div class="friends-list">
+                <div class="right-sidebar-text">
+                    <p>Friends</p>
+                    <img src="Plus.png" alt="Open Popup" onclick="showPopup()" style="cursor: pointer;">
+                    <div id="popup" class="popup" style="display: none;">
+                        <span class="close" onclick="hidePopup()">&times;</span>
+                        <input type="text" id="usernameInput" placeholder="Enter username">
+                        <p class="statusText">User found ph</p>
+                        <button onclick="addFriend()">Add Friend</button>
+                        <script src="popUp.js"></script>
+                    </div>
+                </div>
+                <div class="friend">
+                    <img src="picture.png" alt="Profile Picture">
+                    <p>Blake</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
 </html>

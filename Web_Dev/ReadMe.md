@@ -9,4 +9,5 @@ Update packages
         Not sure if this will work if you have no existing node modules, but that shouldn't happen if you pull from GitHub as the node_modules folder comes with
     In VS terminal run 'npm rebuild'
 Run server in VS terminal run 'node index.js'
+    There are SQLITE errors, I know, its not critical
 Stop server in VS terminal run 'node stop.js'
