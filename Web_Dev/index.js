@@ -108,4 +108,25 @@ const initializeServer = async () => {
     }
 };
 
-initializeServer();
+function generateUniqueFilePath(userFile) {
+    const timestamp = Date.now();
+    const randomNumber = Math.floor(Math.random() * 1000000);
+    const fileName = `file_${timestamp}_${randomNumber}`;
+
+    const fileExtension = getFileExtension(userFile.originalname); // Use the originalname property to get the file extension
+    const filePath = `uploads/${fileName}${fileExtension ? '.' + fileExtension : ''}`;
+
+    return filePath;
+}
+
+function moveFileToDestination(sourcePath, destinationPath) {
+    return new Promise((resolve, reject) => {
+        fs.copyFile(sourcePath, destinationPath, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
