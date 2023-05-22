@@ -2,7 +2,6 @@
 <html>
 
 <head>
-    <!--Gurantees use of correct and updated characters for HTML5-->
     <meta charset="UTF-8">
     <title>Bifrost - The Metaverse at your Fingertips</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -34,24 +33,25 @@
         <div class="content" id="content">
             <div>
                 <div class="create-post-container">
-                    <form id="newPostForm">
+                    <form id="newPostForm" enctype="multipart/form-data" action="/posts" method="POST">
+                        <!-- Specify the form action and method -->
                         <div class="welcome-text">
                             <p>Add to the Multiverse</p>
                         </div>
                         <div class="form-group">
                             <label for="post-textarea">What do you want to say...</label>
-                            <input type="textarea" class="form-control" name="post-textarea"
-                                id="post-textarea"></textarea>
+                            <textarea class="form-control" name="PostTextArea" id="post-textarea"></textarea>
                         </div>
                         <div class="form-group file-picker">
-                            <label for="post-file">Attach a file...</label>
-                            <input type="file" class="form-control" name="post-file" id="post-file"></textarea>
+                            <label for="PostFile">Attach a file...</label>
+                            <input type="file" class="form-control" name="PostFile" id="PostFile">
+                            <!-- Update the input field name -->
+                        </div>
+                        <div class="create-post-button">
+                            <button type="submit" id="submitButton">Send</button>
+                            <!-- Change the button type to submit -->
                         </div>
                     </form>
-                    <div class="create-post-button">
-                        <button id="submitButton" onclick="createNewElement()">Send</button>
-                        <script src="post.js"></script>
-                    </div>
                 </div>
             </div>
             <div id="post">
@@ -60,7 +60,7 @@
                         <p>User</p>
                     </div>
                     <div class="post-profile">
-                        <img src="picture.png" />
+                        <img src="picture.png" alt="Profile Picture">
                     </div>
                     <div class="like-counter" id="like-counter" data-count="0">
                         <p>0 likes</p>
@@ -71,11 +71,10 @@
                     </div>
                     <div class="text-boxes">
                         <p class="post-text">Sample post text</p>
-                        <p class="post-file">Sample file content</p>
+                        <p class="PostFile">Sample file content</p>
                     </div>
                 </div>
             </div>
-        </div>
         </div>
         <div class="right-sidebar">
             <div class="friends-list">
@@ -97,6 +96,7 @@
             </div>
         </div>
     </main>
+    <script src="post.js"></script>
 </body>
 
 </html>

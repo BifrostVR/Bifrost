@@ -6,12 +6,13 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const path = require('path');
 const DBAbstraction = require('./DBAbstraction');
-const fs = require('fs');
+const { generateUniqueFilePath, moveFileToDestination } = require('./utils');
+const fs = require('fs').promises;
 
 const app = express();
 const upload = multer({ dest: 'uploads/' }); // Specify the destination folder for uploaded files
 
-const filePathPosts = path.join(__dirname, 'data', 'posts.sqlite');
+const filePathPosts = path.resolve(__dirname, 'data', 'posts.sqlite');
 const dbPosts = new DBAbstraction(filePathPosts);
 
 app.use(morgan('dev'));
@@ -19,13 +20,43 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+const sendErrorResponse = (res, error) => {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+};
+
+const handlePostRequest = async (req, res) => {
+    try {
+        const postTextArea = req.body.PostTextArea;
+        const file = req.file;
+
+        let filePath = null;
+
+        if (file) {
+            // Generate a unique file name or create a suitable file path/URL
+            filePath = generateUniqueFilePath(file);
+
+            // Move or copy the file to the desired location (e.g., a folder on the server or a cloud storage)
+            await moveFileToDestination(file, filePath);
+        }
+
+        // Insert the post into the database with the file path or null
+        await dbPosts.insertPost(postTextArea, filePath);
+
+        // Send a response indicating success
+        res.json({ success: true });
+    } catch (error) {
+        // Handle any errors that occurred during the file upload or database insertion
+        sendErrorResponse(res, error);
+    }
+};
+
 app.get('/', async (req, res) => {
     try {
         const allPosts = await dbPosts.getAll();
         res.json(allPosts);
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
+        sendErrorResponse(res, error);
     }
 });
 
@@ -34,96 +65,47 @@ app.get('/posts', async (req, res) => {
         const allPosts = await dbPosts.getAll();
         res.json(allPosts);
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
+        sendErrorResponse(res, error);
     }
 });
 
-app.post('/posts', upload.single('PostFile'), async (req, res) => {
+app.post('/posts', (req, res, next) => {
+    upload.single('PostFile')(req, res, function (err) {
+        if (err) {
+            // Handle multer errors
+            console.error(err);
+            res.status(400).json({ success: false, error: 'File upload error.' });
+        } else {
+            next(); // Continue to process the request
+        }
+    });
+}, handlePostRequest);
+
+app.get('/uploads/:filename', async (req, res) => {
     try {
-        const userText = req.body.PostTextArea;
-        const userFile = req.file;
+        const filename = req.params.filename;
+        const filePath = path.resolve(__dirname, 'uploads', filename);
 
-        console.log('userFile:', userFile);
-        console.log('generateUniqueFilePath - userFile:', generateUniqueFilePath(userFile));
-
-        const filePath = generateUniqueFilePath(userFile);
-
-        console.log('filePath:', filePath);
-
-        await moveFileToDestination(userFile.path, filePath);
-
-        const newPost = {
-            PostTextArea: userText,
-            FilePath: filePath,
-        };
-
-        await dbPosts.insertPost(newPost.PostTextArea, newPost.FilePath);
-
-        const allPosts = await dbPosts.getAll();
-        res.json(allPosts);
+        await fs.access(filePath, fs.constants.F_OK);
+        res.sendFile(filePath);
     } catch (error) {
         console.error(error);
-        res.status(500).send('Internal Server Error');
+        res.status(404).send(`<h2>Uh Oh!</h2><p>Sorry /uploads/${filename} cannot be found here</p>`);
     }
 });
-
 
 app.use((req, res) => {
     res.status(404).send(`<h2>Uh Oh!</h2><p>Sorry ${req.url} cannot be found here</p>`);
 });
 
-dbPosts.init()
-    .then(async () => {
+const initializeServer = async () => {
+    try {
+        await dbPosts.init();
         app.listen(53140, () => console.log('The server is up and running...'));
-
-        // //Testing inserting both text and a file(path)
-        // const testText = 'test text';
-        // const testFilePath = path.join(__dirname, 'testfile.txt');
-
-        // try {
-        //     // Insert the test post with the file path into the database
-        //     await dbPosts.insertPost(testText, testFilePath);
-        //     console.log('Test post inserted successfully');
-        // } catch (error) {
-        //     console.error('Error inserting test post:', error);
-        // }
-    })
-    .catch(err => {
+    } catch (err) {
         console.log('Problem setting up the database');
         console.log(err);
-    });
-
-function getFileExtension(fileNameOrPath) {
-    if (typeof fileNameOrPath !== 'string') {
-        return '';
     }
-    const parts = fileNameOrPath.split('.');
-    if (parts.length === 1) {
-        return '';
-    }
-    return parts.pop().toLowerCase();
-}
+};
 
-function generateUniqueFilePath(userFile) {
-    const timestamp = Date.now();
-    const randomNumber = Math.floor(Math.random() * 1000000);
-    const fileName = `file_${timestamp}_${randomNumber}`;
-
-    const fileExtension = getFileExtension(userFile.originalname); // Use the originalname property to get the file extension
-    const filePath = `uploads/${fileName}${fileExtension ? '.' + fileExtension : ''}`;
-
-    return filePath;
-}
-
-function moveFileToDestination(sourcePath, destinationPath) {
-    return new Promise((resolve, reject) => {
-        fs.copyFile(sourcePath, destinationPath, (err) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
-    });
-}
+initializeServer();
