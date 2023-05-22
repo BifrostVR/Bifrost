@@ -2,22 +2,26 @@
 
 #define CNFG_IMPLEMENTATION
 #define CNFGOGL
+#define STB_IMAGE_IMPLEMENTATION
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <vector>
 #include "deps/rawdraw_sf.h"
+#include "deps/stb_image.h"
 #include "deps/openvr.h"
 #include "deps/whisper.h"
 #include "deps/sqlite3.h"
 #include "audio_async.h"
-#include <stdio.h>
-#include <time.h>
-#include <vector>
 
 using namespace::vr; // "openvr.h" uses the vr namespace, and with openvr making the majority of the cript, it's namespace is preferred
 
-// Rawdraw function defs
+// Rawdraw defs
 void HandleKey( int keycode, int bDown ) { }
 void HandleButton( int x, int y, int button, int bDown ) { }
 void HandleMotion( int x, int y, int mask ) { }
 void HandleDestroy() { }
+unsigned char * imgPost;
 
 // VR defs
 VROverlayHandle_t ulHandle; // OpenVR application ID
@@ -31,9 +35,9 @@ sqlite3_stmt * stmt;
 std::vector<std::string> posts; // Saved posts
 int max = -10; // Trakcs the maximum position in posts
 int cur = -10; // Tracks the current position in posts
-bool notif = false;
+bool notif = true;
 char* err;
-bool con; // Updates 
+bool con; // Checks server connectivity
 
 int WIDTH = 256;
 int HEIGHT = 256;
@@ -81,7 +85,7 @@ void RawToVR(GLuint texture) {
 
 void UpdateFeed() {
     sqlite3_open(server, &db);
-    int check = sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS Posts(Id INT AUTO_INCREMENT, PostTextArea TEXT, PostFile TEXT, PRIMARY KEY('Id'));", NULL, NULL, &err);
+    int check = sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS Posts(Id INT PRIMARY KEY AUTOINCREMENT, PostTextArea TEXT, FilePath TEXT);", NULL, NULL, &err);
     con = check == SQLITE_OK;
     sqlite3_prepare_v2(db, "SELECT * FROM Posts", -1, &stmt, 0);
     posts.clear();
@@ -97,15 +101,40 @@ void UpdateFeed() {
     }
 }
 
+std::string Segment(std::string seperate) {
+    std::string newOne = seperate;
+    if (newOne.length() > 28) {
+        int toLoop = newOne.length() / 28;
+        for (int j = 0; j < toLoop; j++) {
+            for (int i = std::min(28 * (j + 1), (int)newOne.length() - 1); i < 0; i--) {
+                if (newOne[i] == ' ') {
+                    newOne[i] = '\n';
+                    break;
+                }
+            }
+        }
+    }
+    return newOne;
+}
+
 int main()
 {
     CNFGSetup( "BifrostVR", -WIDTH, -HEIGHT); // Negative hides the application window on desktop, leaving only the terminal
+    int iw, ih, ic; // Image deps
+    imgPost = stbi_load("Resources/post.png", &iw, &ih, &ic, 0);
+    GLuint texture = 0; // Prepare OpenGL texture for future binding
     {
-        EVRInitError e;
-        VR_Init(&e, VRApplication_Overlay); // Sets application type as overlay
-        if (e != VRInitError_None) return 1;
+        glGenTextures( 1, &texture );
+        glBindTexture( GL_TEXTURE_2D, texture );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
     }
 
+    
+    EVRInitError e;
+    VR_Init(&e, VRApplication_Overlay); // Sets application type as overlay
+    if (e != VRInitError_None) return 1; // Stops running if SteamVR fails launch
     VROverlay()->CreateOverlay("BifrostVR-tag", "BifrostVR", &ulHandle); // Prepares and starts overlay
     VROverlay()->SetOverlayWidthInMeters(ulHandle, 0.25);
     VROverlay()->SetOverlayColor(ulHandle, 1,1,1);
@@ -120,15 +149,6 @@ int main()
     bounds.vMax = 1;
     VROverlay()->SetOverlayTextureBounds(ulHandle, &bounds);
     VROverlay()->ShowOverlay(ulHandle);
-    
-    GLuint texture = 0; // Prepare OpenGL texture for future binding
-    {
-        glGenTextures( 1, &texture );
-        glBindTexture( GL_TEXTURE_2D, texture );
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-    }
 
     whisper_full_params wparams = whisper_full_default_params(WHISPER_SAMPLING_GREEDY); // Properties needed to use whisper.h
     {
@@ -150,11 +170,12 @@ int main()
     whisper_context * ctx = whisper_init_from_file("ggml-base.en.bin"); // Engages whisper.h
     audio_async audio; // Prepares for audio capture
     audio.init();
-    std::vector<float> pcmf32;
+    std::vector<float> pcmf32; // HOlds post audio for processing
 
     // Event bools
     bool open = false; // Open beyond the icon
     bool closed = true; // Closed to icon
+    bool down = false; // Keeps down scrolling controllable
     bool post = false; // In the post menu
     bool recording = false; // Actively recording
     bool msg = false; // Message made
@@ -215,6 +236,12 @@ int main()
                         }
                     }
                     else if (cEvent.data.mouse.button == VRMouseButton_Right && dcrfix) dcrfix = false;
+                    if (!cEvent.data.scroll.unused && !down) {
+                        if (cEvent.data.scroll.ydelta < -0.9) {
+                            down = true;
+                            if (cur != 0) cur--;
+                        }
+                    }
                     if (cEvent.data.mouse.button == VRMouseButton_Left && post && !dclfix) {
                         dclfix = true;
                         if (!recording && !msg) {
@@ -239,17 +266,22 @@ int main()
                         }
                         else if (!recording && msg && !aFail) {
                             sqlite3_open(server, &db); // Pushes from whisper to server
-                            std::string query = "INSERT INTO Posts (PostTextArea, PostFile) VALUES ('" + content + "', NULL);";
+                            std::string query = "INSERT INTO Posts (PostTextArea, FilePath) VALUES ('" + content + "', NULL);";
                             sqlite3_exec(db, query.c_str(), NULL, NULL, &err); // Executes query
                             sqlite3_close(db);
                             post = false;
                             msg = false;
                         }
                     }
-                    else if (cEvent.data.mouse.button == VRMouseButton_Left && post && dclfix) dclfix = false;
+                    else if (cEvent.data.mouse.button == VRMouseButton_Left && !post && !dclfix) {
+                        dclfix = true;
+                        if (cur != max) cur++;
+                    }
+                    else if (cEvent.data.mouse.button == VRMouseButton_Left && dclfix) dclfix = false;
                     time(&ct1);
                 }
                 time(&ct2);
+                down = false;
                 if (difftime(ct2, ct1) > 5 && !post) {
                     open = false;
                     closed = true;
@@ -261,21 +293,39 @@ int main()
             if (open) {
                 if (!post) {
                     if (!con) CNFGDrawText("Failed to fetch server", 3);
-                    else if (cur < 0) CNFGDrawText("Not much here...", 3);
-                    else CNFGDrawText(posts[cur].c_str(), 3 );
+                    else {
+                        if (cur < 0) CNFGDrawText("Not much here...", 3);
+                        else CNFGDrawText(Segment(posts[cur]).c_str(), 3 );
+                        CNFGBlitImage((unsigned int*)imgPost, 10, 120, iw, ih);
+                        CNFGColor( 0x5CE1E6ff);
+                        CNFGPenX = 48; CNFGPenY = 130;
+                        CNFGDrawText( "Post something", 3 );
+                    }
                 }
                 else {
-                    if (!recording && !msg) CNFGDrawText("Pull trigger to record message", 3);
-                    else if (!recording && msg) CNFGDrawText(content.c_str(), 3); // Uses the raw string because it hasn't been posted yet
+                    if (!recording && !msg) CNFGDrawText("Pull trigger to start message", 3);
+                    else if (!recording && msg) CNFGDrawText(Segment(content).c_str(), 3); // Uses the raw string because it hasn't been posted yet
                     else CNFGDrawText("Pull trigger to end message", 3);
+                    if (!recording) {
+                        CNFGBlitImage((unsigned int*)imgPost, 10, 120, iw, ih);
+                        CNFGColor( 0x5CE1E6ff);
+                        CNFGPenX = 48; CNFGPenY = 130;
+                        CNFGDrawText( "Back to board", 3 );
+                    }
                 }
             }
             else if (closed) {
+                if (notif) {
+                    CNFGColor( 0x5CE1E6ff);
+                    RDPoint points[8] = { { 112, 130 }, { 112, 114 }, { 120, 106 }, { 136, 106 }, {144, 114}, {144, 130}, {136, 138}, {120, 138}};
+                    CNFGTackPoly( points, 8 );
+                }
                 CNFGColor( 0x3f3f3fff );
-                RDPoint points[8] = { { 118, 27 }, { 118, 17 }, { 123, 12 }, { 133, 12 }, {138, 17}, {138, 27}, {133, 32}, {123, 32}};
+                RDPoint points[8] = { { 118, 127 }, { 118, 117 }, { 123, 112 }, { 133, 112 }, {138, 117}, {138, 127}, {133, 132}, {123, 132}};
                 CNFGTackPoly( points, 8 );
-                CNFGPenX = 120; CNFGPenY = 15; // Overides standard (1,1)
-                CNFGColor( 0xffffffff );
+                CNFGPenX = 120; CNFGPenY = 115; // Overides standard (1,1)
+                if (notif) CNFGColor( 0x5CE1E6ff);
+                else CNFGColor( 0xffffffff );
                 CNFGDrawText( "BF", 3 );
             }
         }
