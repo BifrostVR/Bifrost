@@ -12,7 +12,8 @@ const fs = require('fs').promises;
 const app = express();
 const upload = multer({ dest: 'uploads/' }); // Specify the destination folder for uploaded files
 
-const filePathPosts = path.resolve(__dirname, 'data', 'posts.sqlite');
+// const filePathPosts = path.join('/home/pi', 'Bifrost', 'posts.sqlite'); // For server use
+const filePathPosts = path.join(__dirname, 'data', 'posts.sqlite'); // For local use
 const dbPosts = new DBAbstraction(filePathPosts);
 
 app.use(morgan('dev'));
